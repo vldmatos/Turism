@@ -1,0 +1,28 @@
+﻿@inherits LayoutComponentBase
+
+<MudThemeProvider/>
+<MudDialogProvider/>
+<MudSnackbarProvider/>
+<MudThemeProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudText Typo="Typo.h5"  Class="ml-3">Turism</MudText>
+        <MudSpacer />
+        <MudNavLink Href="/customer/booking">Booking</MudNavLink>
+        <MudSpacer />
+        <MudPaper Elevation="0">
+            <MudNavMenu Dense="true" Rounded="true" Margin="Margin.Dense" Color="Color.Secondary" Class="pa-2">                
+                <MudNavGroup Title="Administration" Expanded="false">
+                    <MudNavLink Href="/administration/informations">Informations</MudNavLink>
+                    <MudNavLink Href="/administration/partners">Partners</MudNavLink>
+                </MudNavGroup>                
+            </MudNavMenu>
+        </MudPaper>
+    </MudAppBar>
+    <MudMainContent>
+        <MudContainer Class="mt-16" MaxWidth="MaxWidth.Medium">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>

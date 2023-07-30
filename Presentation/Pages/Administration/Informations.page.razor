@@ -1,0 +1,131 @@
+﻿@page "/administration/informations"
+
+@using Shared.Entities.Units
+@using Shared.Views.Collections
+
+@inject IFunction Function
+
+<h3>Informations</h3>
+<EditForm Model="@Information" OnValidSubmit="@Save">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <MudGrid>
+        <MudItem xs="12" md="12">
+            <MudTextField @bind-Value="@Information.Title" 
+                            Label="Title of Information page" 
+                            Immediate="true" 
+                            Variant="Variant.Text" />
+        </MudItem>
+        <MudItem xs="12" md="12">
+            <MudTextField @bind-Value="@Information.Description" 
+                            Label="Description of Page" 
+                            Lines="7" 
+                            Variant="Variant.Outlined" />
+        </MudItem>        
+        <MudItem xs="12" md="12">        
+            <MudPaper Class="d-flex justify-end py-2 px-1 mt-6">
+                 <MudButton StartIcon="@Icons.Material.Filled.AddCircle" 
+                            Variant="Variant.Outlined" 
+                            Color="Color.Primary"                         
+                            OnClick=@(()=> Information = new Information()) 
+                            Class="pa-2 mx-2">
+                            Create
+                </MudButton>
+                <MudButton ButtonType="ButtonType.Submit"
+                            Variant="Variant.Outlined" 
+                            StartIcon="@Icons.Material.Filled.Save" 
+                            Color="Color.Primary"
+                            Class="pa-2 mx-2">
+                    @if (saving) { <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/><MudText Class="ms-2">Processing..</MudText> }
+                    else { <MudText>Save</MudText> }
+                </MudButton>
+                <MudButton OnClick=Delete 
+                            Variant="Variant.Outlined" 
+                            StartIcon="@Icons.Material.Filled.Delete" 
+                            Color="Color.Error" 
+                            Class="pa-2 mx-2">
+                    @if (deleting) { <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/><MudText Class="ms-2">Processing..</MudText> }
+                    else { <MudText>Delete</MudText> }
+                </MudButton>          
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</EditForm>
+
+<MudTable Items="@Informations" @bind-SelectedItem=@Information 
+           Hover="true" 
+           MultiSelection="false" 
+           Breakpoint="Breakpoint.Sm" 
+           LoadingProgressColor="Color.Info"
+           Loading="@loading">
+    <HeaderContent>
+        <MudTh>Enabled</MudTh>
+        <MudTh>Title</MudTh>
+        <MudTh>Description</MudTh>
+    </HeaderContent>
+        <RowTemplate>
+            <MudSwitch @bind-Checked=@context.Enabled Color="Color.Primary"/>
+            <MudTd DataLabel="Title">@context.Title</MudTd>
+            <MudTd DataLabel="Description">@context.Description</MudTd>            
+        </RowTemplate>
+</MudTable>
+
+@code
+{    
+    private bool saving = false;
+    private bool deleting = false;
+    private bool loading = false;
+
+    private Information Information { get; set; } = new ();
+    private Informations Informations { get; set; }    
+
+    protected override Task OnInitializedAsync() => Load();
+
+    private async Task Load()
+    {
+        loading = true;
+
+        Informations = await Function.Search<Informations>(new Filter() 
+                                     {
+                                         Operation="all", 
+                                         Source=GetType().FullName
+                                     });
+        StateHasChanged();
+
+        loading = false;
+    }
+
+    private async Task Save()
+    {
+        saving = true;
+
+        await Function.Execute<Information>(new Argument()
+                       {
+                            Operation = "save",
+                            Context = Information,
+                            Source = GetType().FullName
+                       });
+
+        Information = new Information();
+
+        await Load();
+        saving = false;
+    }
+
+    private async Task Delete()
+    {
+        deleting = true;
+
+        await Function.Execute<Information>(new Argument()
+                       {
+                            Operation = "delete",
+                            Context = Information,
+                            Source = GetType().FullName
+                       });
+
+        await Load();
+
+        Information = new Information();
+        deleting = false;
+    }
+}

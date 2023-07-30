@@ -1,0 +1,124 @@
+﻿@page "/administration/partners"
+
+@using Shared.Entities.Units
+@using Shared.Views.Collections
+
+@inject IFunction Function
+
+<h3>Partnes</h3>
+<EditForm Model="@Partner" OnValidSubmit="@Save">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <MudGrid>
+        <MudItem xs="12" md="12">
+            <MudTextField @bind-Value="@Partner.Name" 
+                            Label="Name of Partner" 
+                            Immediate="true" 
+                            Variant="Variant.Text" />
+        </MudItem>     
+        <MudItem xs="12" md="12">        
+            <MudPaper Class="d-flex justify-end py-2 px-1 mt-6">
+                 <MudButton StartIcon="@Icons.Material.Filled.AddCircle" 
+                            Variant="Variant.Outlined" 
+                            Color="Color.Primary"                         
+                            OnClick=@(()=> Partner = new Partner()) 
+                            Class="pa-2 mx-2">
+                            Create
+                </MudButton>
+                <MudButton ButtonType="ButtonType.Submit"
+                            Variant="Variant.Outlined" 
+                            StartIcon="@Icons.Material.Filled.Save" 
+                            Color="Color.Primary"
+                            Class="pa-2 mx-2">
+                    @if (saving) { <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/><MudText Class="ms-2">Processing..</MudText> }
+                    else { <MudText>Save</MudText> }
+                </MudButton>
+                <MudButton OnClick=Delete 
+                            Variant="Variant.Outlined" 
+                            StartIcon="@Icons.Material.Filled.Delete" 
+                            Color="Color.Error" 
+                            Class="pa-2 mx-2">
+                    @if (deleting) { <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/><MudText Class="ms-2">Processing..</MudText> }
+                    else { <MudText>Delete</MudText> }
+                </MudButton>          
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</EditForm>
+
+<MudTable Items="@Partners" @bind-SelectedItem=@Partner 
+           Hover="true" 
+           MultiSelection="false" 
+           Breakpoint="Breakpoint.Sm" 
+           LoadingProgressColor="Color.Info"
+           Loading="@loading">
+    <HeaderContent>
+        <MudTh>Enabled</MudTh>
+        <MudTh>Name</MudTh>
+    </HeaderContent>
+        <RowTemplate>
+            <MudSwitch @bind-Checked=@context.Enabled Color="Color.Primary"/>
+            <MudTd DataLabel="Title">@context.Name</MudTd>
+        </RowTemplate>
+</MudTable>
+
+
+@code
+{
+    private bool saving = false;
+    private bool deleting = false;
+    private bool loading = false;
+
+    private Partner Partner { get; set; } = new();
+    private Partners Partners { get; set; }    
+
+    protected override Task OnInitializedAsync() => Load();
+
+    private async Task Load()
+    {
+        loading = true;
+
+        Partners =  await Function.Search<Partners>(new Filter()
+                                       {
+                                           Operation = "all",
+                                           Source = GetType().FullName
+                                       });
+        StateHasChanged();
+
+        loading = false;
+    }
+
+    private async Task Save()
+    {
+        saving = true;
+
+        await Function.Execute<Partner>(new Argument()
+                       {
+                            Operation = "save",
+                            Context = Partner,
+                            Source = GetType().FullName
+                       });
+
+        Partner = new Partner();
+
+        await Load();
+        saving = false;
+    }
+
+    private async Task Delete()
+    {
+        deleting = true;
+
+        await Function.Execute<Partner>(new Argument()
+                       {
+                            Operation = "delete",
+                            Context = Partner,
+                            Source = GetType().FullName
+                       });
+
+        await Load();
+
+        Partner = new Partner();
+        deleting = false;
+    }
+}

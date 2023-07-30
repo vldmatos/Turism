@@ -1,0 +1,61 @@
+﻿@page "/customer/booking"
+
+@using Shared.Entities.Contexts
+@using Shared.Entities.Units
+@using Shared.Models
+
+@inject IFunction Provider
+
+<h3>Booking</h3>
+<MudButton OnClick=Send 
+            Variant="Variant.Outlined" 
+            StartIcon="@Icons.Material.Filled.Delete" 
+            Color="Color.Error">
+    @if (sending) { <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/><MudText Class="ms-2">Processing..</MudText> }
+    else { <MudText>Send</MudText> }
+</MudButton>  
+
+@code 
+{
+    private bool sending = false;
+
+    private async Task Send()
+    {
+        sending = true;
+
+        var booking = new Booking()
+        {
+           Price = 20,
+           User = new()
+           {
+                Name = "Vladimir",
+                Email = "vladimir.matos@gmail.com",
+                BirthDate = new DateTime(1986, 5, 13)
+           },
+
+           Hotel = new()
+           {
+               Name = "Hotel LTDA",
+               Category = HotelCategory.Star_01,
+               Address = new()
+               {
+                    Country = "Brazil",
+                    State = "Sao Paulo",
+                    StateAcronym = "SP",
+                    District = "Centro",
+                    Street = "Rua Boreus",
+                    Number = 9201
+               }
+           }
+        };
+
+        await Provider.Execute<Booking>(new Argument()
+                       {
+                            Operation = "booking",
+                            Context = booking,
+                            Source = GetType().FullName
+                       });
+
+        sending = false;
+    }
+}
